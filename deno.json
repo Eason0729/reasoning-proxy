@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "start": "deno run -A --env-file=.env main.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "opencc-js": "npm:opencc-js@^1.0.5"
+  }
+}
