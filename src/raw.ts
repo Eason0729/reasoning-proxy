@@ -1,0 +1,22 @@
+export interface CompletionRequest {
+  model?: string;
+  stream?: boolean;
+  messages?: Message[];
+}
+
+export interface Message {
+  role?: string;
+  content?: string;
+}
+
+export interface CompletionResponse {
+  model: string;
+  choices: Choice[];
+}
+
+export interface Choice {
+  index: number;
+  message: Message;
+  reasoning?: string;
+  finish_reason: string | null;
+}

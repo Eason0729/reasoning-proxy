@@ -1,4 +1,5 @@
 import * as OpenCC from "opencc-js";
+import { CompletionResponse } from "./raw.ts";
 
 const openccConverter = OpenCC.Converter({ from: "cn", to: "twp" });
 
@@ -79,4 +80,36 @@ export function streamWrapper(
   });
 
   return body;
+}
+
+function extractReasoning(
+  content: string,
+): { content: string; reasoning: string | null } {
+  const reasoningRegex = /<think>([\s\S]*?)<\/think>/;
+  const match = content.match(reasoningRegex);
+  if (match) {
+    return {
+      content: content.replace(reasoningRegex, "").trim(),
+      reasoning: match[1].trim(),
+    };
+  }
+  return { content, reasoning: null };
+}
+
+export async function wrapper(response: Response): Promise<Response> {
+  const body = await response.json() as CompletionResponse;
+
+  body.choices = body.choices.map((choice) => {
+    if (choice.message?.content) {
+      const { content, reasoning } = extractReasoning(choice.message.content);
+      if (reasoning) choice.reasoning += reasoning;
+      choice.message.content = openccConverter(content);
+    }
+    return choice;
+  });
+
+  return new Response(JSON.stringify(body), {
+    headers: response.headers,
+    status: response.status,
+  });
 }

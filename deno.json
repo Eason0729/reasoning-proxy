@@ -4,6 +4,7 @@
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
+    "@tavily/core": "npm:@tavily/core@^0.5.11",
     "opencc-js": "npm:opencc-js@^1.0.5"
   }
 }
