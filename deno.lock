@@ -1,16 +1,33 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@pdf/pdftext@^1.3.2": "1.3.2",
     "jsr:@std/assert@1": "1.0.14",
+    "jsr:@std/assert@^1.0.12": "1.0.14",
+    "jsr:@std/expect@1.0.14": "1.0.14",
     "jsr:@std/internal@^1.0.10": "1.0.10",
+    "jsr:@std/internal@^1.0.6": "1.0.10",
     "npm:@tavily/core@~0.5.11": "0.5.11",
     "npm:opencc-js@^1.0.5": "1.0.5"
   },
   "jsr": {
+    "@pdf/pdftext@1.3.2": {
+      "integrity": "6f71a8cf5c3e5e7be55a305ef7803e286002b39f93410400488dcb52c3693eeb",
+      "dependencies": [
+        "jsr:@std/expect"
+      ]
+    },
     "@std/assert@1.0.14": {
       "integrity": "68d0d4a43b365abc927f45a9b85c639ea18a9fab96ad92281e493e4ed84abaa4",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.10"
+      ]
+    },
+    "@std/expect@1.0.14": {
+      "integrity": "27b8200267c97206e38050aff18badc82e73b3072c1a6bdd59393ddea6f69183",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.12",
+        "jsr:@std/internal@^1.0.6"
       ]
     },
     "@std/internal@1.0.10": {
@@ -185,6 +202,9 @@
       "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg=="
     }
   },
+  "redirects": {
+    "https://deno.land/std/encoding/base64.ts": "https://deno.land/std@0.224.0/encoding/base64.ts"
+  },
   "remote": {
     "https://deno.land/std@0.140.0/async/abortable.ts": "87aa7230be8360c24ad437212311c9e8d4328854baec27b4c7abb26e85515c06",
     "https://deno.land/std@0.140.0/async/deadline.ts": "48ac998d7564969f3e6ec6b6f9bf0217ebd00239b1b2292feba61272d5dd58d0",
@@ -195,10 +215,13 @@
     "https://deno.land/std@0.140.0/async/mux_async_iterator.ts": "f4d1d259b0c694d381770ddaaa4b799a94843eba80c17f4a2ec2949168e52d1e",
     "https://deno.land/std@0.140.0/async/pool.ts": "97b0dd27c69544e374df857a40902e74e39532f226005543eabacb551e277082",
     "https://deno.land/std@0.140.0/async/tee.ts": "1341feb1f5b1a96f8628d0f8fc07d8c43d3813423f18a63bf1b4785568d21b1f",
-    "https://deno.land/std@0.140.0/http/server.ts": "3da75405704bebcf212a55966a68a489f7e094ba52b5d38f181fe0ef8461a55d"
+    "https://deno.land/std@0.140.0/http/server.ts": "3da75405704bebcf212a55966a68a489f7e094ba52b5d38f181fe0ef8461a55d",
+    "https://deno.land/std@0.224.0/encoding/_util.ts": "beacef316c1255da9bc8e95afb1fa56ed69baef919c88dc06ae6cb7a6103d376",
+    "https://deno.land/std@0.224.0/encoding/base64.ts": "dd59695391584c8ffc5a296ba82bcdba6dd8a84d41a6a539fbee8e5075286eaf"
   },
   "workspace": {
     "dependencies": [
+      "jsr:@pdf/pdftext@^1.3.2",
       "jsr:@std/assert@1",
       "npm:@tavily/core@~0.5.11",
       "npm:opencc-js@^1.0.5"

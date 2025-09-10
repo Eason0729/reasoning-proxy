@@ -3,6 +3,7 @@ import { proxy } from "./src/proxy.ts";
 import { streamWrapper, wrapper } from "./src/think.ts";
 import { CompletionRequest } from "./src/raw.ts";
 import { search } from "./src/search.ts";
+import { extractPDFFromMessage } from "./src/pdf.ts";
 
 const target = Deno.env.get("TARGET") ?? "https://lemonade.easonabc.eu.org";
 
@@ -14,6 +15,10 @@ serve(async (req: Request) => {
   ) {
     const endpoint = target + url.pathname;
     const reqJson = await req.json() as CompletionRequest;
+
+    if (reqJson.messages) {
+      extractPDFFromMessage(reqJson.messages);
+    }
 
     let reqInit = {
       method: req.method,

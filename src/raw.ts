@@ -7,6 +7,13 @@ export interface CompletionRequest {
 export interface Message {
   role?: string;
   content?: string;
+  contents?: MessagePart[];
+}
+
+export interface MessagePart {
+  "type": string;
+  file?: string;
+  text?: string;
 }
 
 export interface CompletionResponse {
