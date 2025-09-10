@@ -1,7 +1,9 @@
-# openai server proxy
+# openrouter proxy
 
-The project attempt to convert openai compatible server's to openrouter's.
+openrouter provide some awesome feature:
 
-## Feature
-1. convert simplified Chinese to traditional Chinese with opencc-js
-2. convert `<think></think>` to reasoning field.
+- built-in ORC
+- search with model suffix
+- reasoning with proper templating(`<think></think>` is a terrible idea)
+
+This project attempt to **fix** openai compatible endpoint, giving them ability to have some openrouter's feature
