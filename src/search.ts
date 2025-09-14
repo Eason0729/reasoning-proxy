@@ -1,5 +1,6 @@
 import { tavily, TavilySearchResponse } from "@tavily/core";
 import { CompletionRequest } from "./raw.ts";
+import { wrapper } from "./think.ts";
 
 const apiKey = Deno.env.get("TAVILY_API_KEY");
 const client = tavily({ apiKey });
@@ -58,11 +59,15 @@ async function getOnlineContext(
   const res = await fetch(endpoint, {
     ...request,
     body: JSON.stringify(body),
-  }).then((r) => r.json());
+  }).then(wrapper).then((r) => {
+    console.log("Response status for query generation:", r.status);
+    return r.json();
+  });
 
-  const query = res.choices?.[0]?.message?.content as string;
+  const query = res.choices?.[0]?.message?.content as string | undefined;
 
-  if (query.length > 200) console.warn("generated query too long");
+  if (!query) throw new Error("No query generated");
+  if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);
 
   try {

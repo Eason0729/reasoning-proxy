@@ -23,13 +23,14 @@ serve(async (req: Request) => {
     let reqInit = {
       method: req.method,
       headers: req.headers,
-      body: JSON.stringify({ ...reqJson, stream: true }),
+      body: JSON.stringify({ ...reqJson }),
     } as RequestInit;
     if (reqJson.model?.endsWith(":online")) {
       reqInit = await search(endpoint, reqInit);
     }
 
     if (!reqJson.stream) return fetch(endpoint, reqInit).then(wrapper);
+
     console.info("Handle stream request");
 
     const res = await fetch(endpoint, reqInit);
