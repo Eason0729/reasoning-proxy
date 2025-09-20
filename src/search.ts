@@ -190,8 +190,8 @@ export async function search(
   body.model = body.model?.replace(/\:online$/, "");
 
   body.messages = [
-    ...contextMessage,
     ...messages,
+    ...contextMessage,
   ];
 
   return {
