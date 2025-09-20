@@ -158,7 +158,7 @@ async function getOnlineContext(
     return;
   }
 
-  query = query.replace(/^(整|裡|幫|給|我|\s|:|_|')*/i, "").trim();
+  query = query.replace(/^(整|裡|幫|給|我|理|:|_|')*/i, "").trim();
 
   const now = new Date();
 
