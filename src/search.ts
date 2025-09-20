@@ -194,7 +194,7 @@ export async function search(
     content = content.slice(0, 5000);
     contextMessage.push(
       {
-        role: "system",
+        role: "user",
         content,
       },
     );
