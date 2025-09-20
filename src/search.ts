@@ -151,12 +151,19 @@ async function getOnlineContext(
   // if (query.length > 200) console.warn("generated query too long", { query });
   // else console.log("Generated search query:", query);
 
-  const query = body.messages?.findLast((m) => m.role === "user")?.content;
+  let query = body.messages?.findLast((m) => m.role === "user")?.content;
 
   if (query == undefined || query?.length == 0) {
     console.log("No search query generated.");
     return;
   }
+
+  query = query.replace(/^(整|裡|幫|給|我|\s|:|_|')*/i, "").trim();
+
+  const now = new Date();
+
+  query = query.replace("今天", now.toISOString().split("T")[0]).trim();
+
   if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);
   try {
