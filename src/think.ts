@@ -110,7 +110,6 @@ export async function wrapper(response: Response): Promise<Response> {
 
   // Original response body: {"detail":"Completion failure: C:\\Users\\z1aiebuild\\onnxruntime\\onnxruntime\\core\\providers\\dml\\DmlExecutionProvider\\src\\DmlCommittedResourceAllocator.cpp(22)\\onnxruntime.dll!00007FFACC3F67C6: (caller: 00007FFACC39BDF9) Exception(4) tid(7f4) 887A0005 The GPU device instance has been suspended. Use GetDeviceRemovedReason to determine the appropriate action.\r\n"}
 
-  console.log("Original response body:", body);
   body.choices = body.choices.map((choice) => {
     if (choice.message?.content) {
       const { content, reasoning } = extractReasoning(choice.message.content);

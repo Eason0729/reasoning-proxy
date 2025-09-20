@@ -12,6 +12,7 @@ function getPrompt(): string {
     "Given the user's message and interaction history, decide if a web search is necessary.",
     "You must be **concise** exclusively provide a search query if one is necessary.",
     "Refrain from verbose responses or any additional commentary.",
+    "Use date when time specific data is needed. DONT use relative time like 'recently'/'today'/'last month'.",
     "Prefer suggesting a search if uncertain to provide comprehensive or updated information.",
     "If a search isn't needed at all, respond with an empty string.",
     "Default to a search query when in doubt. Today's date is {{CURRENT_DATE}}.",
@@ -20,11 +21,15 @@ function getPrompt(): string {
     "",
     // --------- 必要搜尋 ---------
     "User: 'What’s the weather like today?'",
-    "Search Query: 'weather today'",
+    "Search Query: 'weather {{CURRENT_DATE}}'",
     "---",
     "",
     "User: 'What’s the latest iPhone price in Taiwan?'",
     "Search Query: 'iPhone price Taiwan 2025'",
+    "---",
+    "",
+    "User: 'What’s the best LLM last month?'",
+    "Search Query: 'best LLM in {{LAST_MONTH}}'",
     "---",
     "",
     "User: 'How many calories are in a banana?'",
@@ -32,7 +37,7 @@ function getPrompt(): string {
     "---",
     "",
     "User: 'Who is the current president of the United States?'",
-    "Search Query: 'current US president'",
+    "Search Query: 'US president {{CURRENT_DATE}}'",
     "---",
     "",
     "User: 'Explain quantum entanglement in simple terms.'",
@@ -54,13 +59,31 @@ function getPrompt(): string {
     "---",
     "",
     "User: 'Show me the stock price of Tesla as of today.'",
-    "Search Query: 'Tesla stock price today'",
+    "Search Query: 'Tesla stock price in {{CURRENT_DATE}}'",
     "---",
   ].join("\n");
-  "Given the user's message and interaction history, decide if a web search is necessary. You must be **concise** and exclusively provide a search query if one is necessary. Refrain from verbose responses or any additional commentary. Prefer suggesting a search if uncertain to provide comprehensive or updated information. If a search isn't needed at all, respond with an empty string. Default to a search query when in doubt. Today's date is {{CURRENT_DATE}}.\n Examples:\nUser: 'What's the weather like today?'\nSearch Query: 'weather today'\n---\nUser: 'Who won the World Series in 2020?'\nSearch Query: '2020 World Series winner'\n---";
-  return queryGenPrompt.replace(
+
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  return queryGenPrompt.replaceAll(
     "{{CURRENT_DATE}}",
     now.toISOString().split("T")[0],
+  ).replaceAll(
+    "{{LAST_MONTH}}",
+    months[(now.getMonth() + months.length - 1) % months.length],
   );
 }
 
@@ -89,7 +112,8 @@ async function getOnlineContext(
   endpoint: string,
   request: RequestInit,
 ): Promise<TavilySearchResponse | undefined> {
-  const body = getBody<CompletionRequest>(request)!;
+  let body = getBody<CompletionRequest>(request)!;
+  body = JSON.parse(JSON.stringify(body));
 
   const infoMessage = body.messages!.filter((m) => m.role !== "system")
     .slice(-5);
@@ -117,7 +141,7 @@ async function getOnlineContext(
 
   if (query == undefined || query?.length == 0) return;
 
-  query = query.replace(/^(Search|query|\s|:|_)*/i, "");
+  query = query.replace(/^(Search|query|\s|:|_|')*/i, "").trim();
 
   if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);
@@ -137,16 +161,20 @@ export async function search(
   request: RequestInit,
 ): Promise<RequestInit> {
   const searchRes = await getOnlineContext(endpoint, request);
-  if (!searchRes) return request;
+  const contextMessage = [];
 
-  const contextMessage = {
-    role: "system",
-    content: searchContextTemplate.replace("{{QUERY}}", searchRes.query)
-      .replace(
-        "{{RESULTS}}",
-        JSON.stringify(searchRes.results, null, 2),
-      ),
-  };
+  if (searchRes != undefined) {
+    contextMessage.push(
+      {
+        role: "system",
+        content: searchContextTemplate.replace("{{QUERY}}", searchRes.query)
+          .replace(
+            "{{RESULTS}}",
+            JSON.stringify(searchRes.results, null, 2),
+          ),
+      },
+    );
+  }
 
   const body = getBody<CompletionRequest>(request)!;
 
@@ -155,7 +183,7 @@ export async function search(
   body.model = body.model?.replace(/\:online$/, "");
 
   body.messages = [
-    contextMessage,
+    ...contextMessage,
     ...messages,
   ];
 
