@@ -139,7 +139,10 @@ async function getOnlineContext(
 
   let query = res.choices?.[0]?.message?.content as string | undefined;
 
-  if (query == undefined || query?.length == 0) return;
+  if (query == undefined || query?.length == 0) {
+    console.log("No search query generated.");
+    return;
+  }
 
   query = query.replace(/^(Search|query|\s|:|_|')*/i, "").trim();
 
