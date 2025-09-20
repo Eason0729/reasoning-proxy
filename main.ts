@@ -20,13 +20,15 @@ serve(async (req: Request) => {
       extractPDFFromMessage(reqJson.messages);
     }
 
+    let searchRes;
     let reqInit = {
       method: req.method,
       headers: req.headers,
       body: JSON.stringify({ ...reqJson }),
     } as RequestInit;
+
     if (reqJson.model?.endsWith(":online")) {
-      reqInit = await search(endpoint, reqInit);
+      [reqInit, searchRes] = await search(endpoint, reqInit);
     }
 
     if (!reqJson.stream) return fetch(endpoint, reqInit).then(wrapper);
@@ -34,7 +36,9 @@ serve(async (req: Request) => {
     console.info("Handle stream request");
 
     const res = await fetch(endpoint, reqInit);
-    const resStream = res.body == null ? null : streamWrapper(res.body);
+    const resStream = res.body == null
+      ? null
+      : streamWrapper(res.body, searchRes);
 
     return new Response(resStream, {
       headers: {

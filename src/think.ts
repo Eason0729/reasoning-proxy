@@ -1,3 +1,4 @@
+import { tavily, TavilySearchResponse } from "@tavily/core";
 import * as OpenCC from "opencc-js";
 import { CompletionResponse } from "./raw.ts";
 
@@ -5,6 +6,7 @@ const openccConverter = OpenCC.Converter({ from: "cn", to: "twp" });
 
 export function streamWrapper(
   stream: ReadableStream<Uint8Array>,
+  searchRes?: TavilySearchResponse,
 ): ReadableStream<Uint8Array> {
   const reader = stream.getReader();
   if (!reader) {
@@ -66,6 +68,21 @@ export function streamWrapper(
               ) {
                 choice.delta.content = "";
                 choice.delta.reasoning = text;
+              }
+
+              if (searchRes && choice.delta.finish_reason) {
+                choice.delta.content = choice.delta.content ||
+                  searchRes.results.map((r) => {
+                    `<citation>
+                      <title>${r.title}</title>
+                      <url>${r.url}</url>
+                      ${
+                      searchRes.favicon == undefined
+                        ? ""
+                        : `<favicon>${searchRes.favicon}</favicon>`
+                    }
+                  </citation>`;
+                  }).join("\n\n");
               }
 
               parsed.choices[0] = choice;
