@@ -115,42 +115,50 @@ async function getOnlineContext(
   let body = getBody<CompletionRequest>(request)!;
   body = JSON.parse(JSON.stringify(body));
 
-  const infoMessage = body.messages!.filter((m) => m.role !== "system")
-    .slice(-5);
+  // const infoMessage = body.messages!.filter((m) => m.role !== "system")
+  //   .slice(-5);
 
-  if (infoMessage.length == 0) return;
+  // if (infoMessage.length == 0) return;
 
-  const systemMessage = {
-    role: "system",
-    content: getPrompt(),
-  };
-  body.messages = [systemMessage, ...infoMessage];
-  body.stream = false;
+  // const systemMessage = {
+  //   role: "system",
+  //   content: getPrompt(),
+  // };
+  // body.messages = [systemMessage, ...infoMessage];
+  // body.stream = false;
 
-  body.model = body.model?.replace(/\:online$/, "");
+  // body.model = body.model?.replace(/\:online$/, "");
 
-  const res = await fetch(endpoint, {
-    ...request,
-    body: JSON.stringify(body),
-  }).then(wrapper).then((r) => {
-    console.log("Response status for query generation:", r.status);
-    return r.json();
-  });
-  console.log({ res });
+  // const res = await fetch(endpoint, {
+  //   ...request,
+  //   body: JSON.stringify(body),
+  // }).then(wrapper).then((r) => {
+  //   console.log("Response status for query generation:", r.status);
+  //   return r.json();
+  // });
+  // console.log({ res });
 
-  let query = res.choices?.[0]?.message?.content as string | undefined;
+  // let query = res.choices?.[0]?.message?.content as string | undefined;
+
+  // if (query == undefined || query?.length == 0) {
+  //   console.log("No search query generated.");
+  //   return;
+  // }
+
+  // query = query.replace(/^(\(|\)|Search|query|\s|:|_|')*/i, "").trim();
+  // query = query.replace(/(\(|\)|\s|:|_|')$/i, "").trim();
+
+  // if (query.length > 200) console.warn("generated query too long", { query });
+  // else console.log("Generated search query:", query);
+
+  const query = body.messages?.findLast((m) => m.role === "user")?.content;
 
   if (query == undefined || query?.length == 0) {
     console.log("No search query generated.");
     return;
   }
-
-  query = query.replace(/^(\(|\)|Search|query|\s|:|_|')*/i, "").trim();
-  query = query.replace(/(\(|\)|\s|:|_|')$/i, "").trim();
-
   if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);
-
   try {
     return await client.search(query, { country: "taiwan" });
   } catch (e) {
