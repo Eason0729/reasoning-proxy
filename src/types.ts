@@ -1,3 +1,4 @@
+
 export interface CompletionRequest {
   model?: string;
   stream?: boolean;
@@ -19,6 +20,12 @@ export interface MessagePart {
 export interface CompletionResponse {
   model: string;
   choices: Choice[];
+}
+
+export interface TavilySearchResponse {
+  query: string;
+  results: any[];
+  favicon?: string;
 }
 
 export interface Choice {

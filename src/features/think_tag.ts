@@ -1,8 +1,5 @@
-import { tavily, TavilySearchResponse } from "@tavily/core";
-import * as OpenCC from "opencc-js";
-import { CompletionResponse } from "./raw.ts";
-
-const openccConverter = OpenCC.Converter({ from: "cn", to: "twp" });
+import { CompletionResponse, TavilySearchResponse } from "../types.ts";
+import { convertToTraditionalChinese } from "./chinese_conversion.ts";
 
 export function streamWrapper(
   stream: ReadableStream<Uint8Array>,
@@ -36,7 +33,10 @@ export function streamWrapper(
 
             if (line.startsWith("data: ")) {
               const data = line.slice(6);
-              if (data === "[DONE]") break;
+              if (data === "[DONE]") {
+                controller.enqueue(new TextEncoder().encode(line + "\n"));
+                break;
+              }
 
               let parsed;
 
@@ -53,7 +53,7 @@ export function streamWrapper(
               let text = `${content || ""}${reasoning || ""}${
                 choice.delta.reasoning_content || ""
               }`;
-              text = openccConverter(text);
+              text = convertToTraditionalChinese(text);
 
               if (choice.delta.reasoning_content != undefined) {
                 inReasoning = "no";
@@ -70,12 +70,12 @@ export function streamWrapper(
                 choice.delta.reasoning = text;
               }
 
-              if (searchRes && choice.delta.finish_reason) {
-                console.log(choice.delta.finish_reason);
+              if (searchRes && choice.finish_reason) {
+                console.log(choice.finish_reason);
                 console.log(searchRes);
-                choice.delta.content = choice.delta.content ||
+                choice.delta.content = (choice.delta.content || "") + "\n\n" +
                   searchRes.results.map((r) => {
-                    `<citation>
+                    return `<citation>
                       <title>${r.title}</title>
                       <url>${r.url}</url>
                       ${
@@ -126,16 +126,18 @@ function extractReasoning(
 export async function wrapper(response: Response): Promise<Response> {
   const body = await response.json() as CompletionResponse;
 
-  // Original response body: {"detail":"Completion failure: C:\\Users\\z1aiebuild\\onnxruntime\\onnxruntime\\core\\providers\\dml\\DmlExecutionProvider\\src\\DmlCommittedResourceAllocator.cpp(22)\\onnxruntime.dll!00007FFACC3F67C6: (caller: 00007FFACC39BDF9) Exception(4) tid(7f4) 887A0005 The GPU device instance has been suspended. Use GetDeviceRemovedReason to determine the appropriate action.\r\n"}
-
   if (body.choices == undefined || body.choices.length == 0) {
-    throw new Error("Unknown error", body as any);
+    console.error("Unknown error", {
+      body,
+      status: response.status,
+    });
   }
+  console.log(body);
   body.choices = body.choices.map((choice) => {
     if (choice.message?.content) {
       const { content, reasoning } = extractReasoning(choice.message.content);
       if (reasoning) choice.reasoning += reasoning;
-      choice.message.content = openccConverter(content);
+      choice.message.content = convertToTraditionalChinese(content);
     }
     return choice;
   });

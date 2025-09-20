@@ -1,6 +1,6 @@
 import { tavily, TavilySearchResponse } from "@tavily/core";
-import { CompletionRequest } from "./raw.ts";
-import { wrapper } from "./think.ts";
+import { CompletionRequest } from "../types.ts";
+import { wrapper } from "./think_tag.ts";
 
 const apiKey = Deno.env.get("TAVILY_API_KEY");
 const client = tavily({ apiKey });
@@ -132,6 +132,7 @@ async function getOnlineContext(
   const res = await fetch(endpoint, {
     ...request,
     body: JSON.stringify(body),
+    method: "POST",
   }).then(wrapper).then((r) => {
     console.log("Response status for query generation:", r.status);
     return r.json();
@@ -145,27 +146,12 @@ async function getOnlineContext(
     return;
   }
 
-  query = query.replace(/^(\(|\)|Search|query|\s|:|_|')*/i, "").trim();
-  query = query.replace(/(\(|\)|\s|:|_|')$/i, "").trim();
+  query = query.replace(/^(|\)|Search|query|\s|:|_|')*/i, "").trim();
+  query = query.replace(/(|\)|\s|:|_|')$/i, "").trim();
 
   if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);
 
-  // let query = body.messages?.findLast((m) => m.role === "user")?.content;
-
-  // if (query == undefined || query?.length == 0) {
-  //   console.log("No search query generated.");
-  //   return;
-  // }
-
-  // query = query.replace(/^(整|裡|幫|給|我|理|:|_|')*/i, "").trim();
-
-  // const now = new Date();
-
-  // query = query.replace("今天", now.toISOString().split("T")[0]).trim();
-
-  // if (query.length > 200) console.warn("generated query too long", { query });
-  // else console.log("Generated search query:", query);
   try {
     return await client.search(query, {
       country: "taiwan",
@@ -216,6 +202,7 @@ export async function search(
 
   return [{
     ...request,
+    method: "POST",
     body: JSON.stringify(body),
   }, searchRes];
 }

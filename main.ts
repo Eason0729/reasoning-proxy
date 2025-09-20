@@ -1,58 +1,71 @@
-import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
 import { proxy } from "./src/proxy.ts";
-import { streamWrapper, wrapper } from "./src/think.ts";
-import { CompletionRequest } from "./src/raw.ts";
-import { search } from "./src/search.ts";
-import { extractPDFFromMessage } from "./src/pdf.ts";
+import { extractPDFFromMessage } from "./src/features/pdf_extraction.ts";
+import { search } from "./src/features/search.ts";
+import { streamWrapper, wrapper } from "./src/features/think_tag.ts";
+import { CompletionRequest } from "./src/types.ts";
 
-const target = Deno.env.get("TARGET") ?? "https://lemonade.easonabc.eu.org";
+const UPSTREAM_API = Deno.env.get("UPSTREAM_API")!.replace(/\/+$/, "");
 
-serve(async (req: Request) => {
-  const url = new URL(req.url);
+if (UPSTREAM_API == undefined) throw new Error("TARGET is not defined");
 
-  if (
-    req.method == "POST" && url.pathname.endsWith("/api/v1/chat/completions")
-  ) {
-    const endpoint = target + url.pathname;
-    const reqJson = await req.json() as CompletionRequest;
+console.info(`Upstream: ${UPSTREAM_API}`);
 
-    if (reqJson.messages) {
-      extractPDFFromMessage(reqJson.messages);
-    }
+async function handler(req: Request): Promise<Response> {
+  const { pathname } = new URL(req.url);
+
+  if (pathname.endsWith("/chat/completions")) {
+    const body = await req.json() as CompletionRequest;
+
+    await extractPDFFromMessage(body.messages);
 
     let searchRes;
-    let reqInit = {
-      method: req.method,
+    let requestInit: RequestInit = {
       headers: req.headers,
-      body: JSON.stringify({ ...reqJson }),
-    } as RequestInit;
+      body: JSON.stringify(body),
+      method: "POST",
+    };
 
-    if (reqJson.model?.endsWith(":online")) {
-      [reqInit, searchRes] = await search(endpoint, reqInit);
+    if (body.model?.endsWith(":online")) {
+      [requestInit, searchRes] = await search(
+        UPSTREAM_API + pathname,
+        requestInit,
+      );
     }
 
-    if (!reqJson.stream) return fetch(endpoint, reqInit).then(wrapper);
+    const res = await fetch(UPSTREAM_API + pathname, requestInit);
 
-    console.info("Handle stream request");
-
-    const res = await fetch(endpoint, reqInit);
-    const resStream = res.body == null
-      ? null
-      : streamWrapper(res.body, searchRes);
-
-    return new Response(resStream, {
-      headers: {
-        ...res.headers,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-      },
-      status: res.status,
-    });
+    if (body.stream) {
+      return new Response(streamWrapper(res.body!, searchRes), {
+        headers: res.headers,
+        status: res.status,
+      });
+    } else {
+      const response = await wrapper(res);
+      if (searchRes) {
+        const body = await response.json();
+        body.choices[0].message.content += "\n\n" +
+          searchRes.results.map((r: any) => {
+            return `<citation>
+            <title>${r.title}</title>
+            <url>${r.url}</url>
+            ${
+              searchRes.favicon == undefined
+                ? ""
+                : `<favicon>${searchRes.favicon}</favicon>`
+            }
+          </citation>`;
+          }).join("\n\n");
+        return new Response(JSON.stringify(body), {
+          headers: response.headers,
+          status: response.status,
+        });
+      }
+      return response;
+    }
   }
 
-  return proxy(req, target);
-}, {
-  port: 8002,
-  hostname: "0.0.0.0",
-});
+  return proxy(req, UPSTREAM_API + pathname);
+}
+
+serve(handler, { port: 8002, hostname: "0.0.0.0" });

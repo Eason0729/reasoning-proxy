@@ -1,5 +1,6 @@
-import { pdfText } from "jsr:@pdf/pdftext@1.3.2";
-import { CompletionRequest } from "./raw.ts";
+
+import { pdfText } from "@pdf/pdftext";
+import { CompletionRequest } from "../types.ts";
 import { decodeBase64 } from "https://deno.land/std/encoding/base64.ts";
 
 export async function extractPDFFromMessage(
