@@ -136,6 +136,7 @@ async function getOnlineContext(
     console.log("Response status for query generation:", r.status);
     return r.json();
   });
+  console.log({ res });
 
   let query = res.choices?.[0]?.message?.content as string | undefined;
 
@@ -144,7 +145,8 @@ async function getOnlineContext(
     return;
   }
 
-  query = query.replace(/^(Search|query|\s|:|_|')*/i, "").trim();
+  query = query.replace(/^(\(|\)|Search|query|\s|:|_|')*/i, "").trim();
+  query = query.replace(/(\(|\)|\s|:|_|')$/i, "").trim();
 
   if (query.length > 200) console.warn("generated query too long", { query });
   else console.log("Generated search query:", query);

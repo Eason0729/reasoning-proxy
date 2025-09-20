@@ -51,6 +51,7 @@ export function streamWrapper(
               let text = `${content || ""}${reasoning || ""}${
                 choice.delta.reasoning_content || ""
               }`;
+              text = openccConverter(text);
 
               if (choice.delta.reasoning_content != undefined) {
                 inReasoning = "no";
@@ -58,8 +59,6 @@ export function streamWrapper(
 
               if (text == "<think>") inReasoning = true;
               else if (text == "</think>") inReasoning = false;
-
-              text = openccConverter(text);
 
               if (
                 choice.delta.reasoning_content != undefined ||
