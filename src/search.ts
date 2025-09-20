@@ -169,14 +169,16 @@ export async function search(
   const contextMessage = [];
 
   if (searchRes != undefined) {
+    const content = searchContextTemplate.replace("{{QUERY}}", searchRes.query)
+      .replace(
+        "{{RESULTS}}",
+        JSON.stringify(searchRes.results, null, 2),
+      );
+    console.log("Search context size:", content.length);
     contextMessage.push(
       {
         role: "system",
-        content: searchContextTemplate.replace("{{QUERY}}", searchRes.query)
-          .replace(
-            "{{RESULTS}}",
-            JSON.stringify(searchRes.results, null, 2),
-          ),
+        content,
       },
     );
   }
