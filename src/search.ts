@@ -184,12 +184,14 @@ export async function search(
   const contextMessage = [];
 
   if (searchRes != undefined) {
-    const content = searchContextTemplate.replace("{{QUERY}}", searchRes.query)
+    let content = searchContextTemplate.replace("{{QUERY}}", searchRes.query)
       .replace(
         "{{RESULTS}}",
         JSON.stringify(searchRes.results, null, 2),
       );
     console.log("Search context size:", content.length);
+
+    content = content.slice(0, 5000);
     contextMessage.push(
       {
         role: "system",
